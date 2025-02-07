@@ -1,0 +1,6 @@
+streamlit
+pydantic_ai
+logfire
+fastapi
+asyncio
+ollama
