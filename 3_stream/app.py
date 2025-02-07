@@ -1,20 +1,19 @@
-from httpx import AsyncClient
 import streamlit as st
 import asyncio
 from pydantic_ai import Agent
 from pydantic_ai.models.openai import OpenAIModel
-from pydantic_ai.messages import UserPromptPart, ModelRequest, ModelResponse, ModelResponsePart, SystemPromptPart, \
-    TextPart
+from pydantic_ai.messages import ModelRequest, ModelResponse,  TextPart
 from devtools import debug
 
-model = OpenAIModel(
-    "gemma2:9b",
-    base_url='http://localhost:11434/v1',
-    api_key='your-api-key',
-)
+# model_name = "gemma2:9b"
+model_name = "llama3.2:3b"
 
 agent = Agent(
-    model,
+    OpenAIModel(
+        model_name,
+        base_url='http://localhost:11434/v1',
+        api_key='your-api-key',
+    ),
     retries=2,
 )
 

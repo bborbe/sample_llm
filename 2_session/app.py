@@ -5,14 +5,15 @@ from pydantic_ai.models.openai import OpenAIModel
 from devtools import debug
 import streamlit as st
 
-model = OpenAIModel(
-    "gemma2:9b",
-    base_url='http://localhost:11434/v1',
-    api_key='your-api-key',
-)
+# model_name = "gemma2:9b"
+model_name = "llama3.2:3b"
 
 agent = Agent(
-    model,
+    OpenAIModel(
+        model_name,
+        base_url='http://localhost:11434/v1',
+        api_key='your-api-key',
+    ),
     retries=2,
 )
 
