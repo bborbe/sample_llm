@@ -1,52 +1,34 @@
+import asyncio
 import streamlit as st
-import ollama
-from pydantic import BaseModel
+from pydantic_ai import Agent
+from pydantic_ai.models.openai import OpenAIModel
+from devtools import debug
 
-# model = "codellama:13b"
-model = "gemma2:9b"
-# model = "llama3.1:8b"
-# model = "llama3.2:3b"
+model = OpenAIModel(
+    "gemma2:9b",
+    base_url='http://localhost:11434/v1',
+    api_key='your-api-key',
+)
 
-# Define a structured response model
-class AIResponse(BaseModel):
-    reply: str
+agent = Agent(
+    model,
+    retries=2,
+)
+async def main():
+    st.title("Ai Agent")
 
-# Streamlit UI
-st.set_page_config(page_title="Local AI Chat", layout="wide")
-st.title("💬 Local AI Chatbot with Ollama")
+    input = st.text_input("Input:")
 
-# Chat history
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+    if st.button("Go"):
+        if input:
+            response = await agent.run(input)
+            debug(response)
+            st.write("Result:")
+            st.write(response.data)
+        else:
+            st.warning("Please enter something")
 
-# Display chat history
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
 
-# User input
-user_input = st.chat_input("Ask me anything...")
 
-if user_input:
-    # Append user message to chat
-    st.session_state.messages.append({"role": "user", "content": user_input})
-    with st.chat_message("user"):
-        st.markdown(user_input)
-
-    # Query the local AI model with full chat history
-    response = ollama.chat(
-        model=model,
-        messages=st.session_state.messages,  # Pass entire conversation
-    )
-
-    try:
-        # Validate response with Pydantic
-        structured_response = AIResponse(reply=response['message']['content'])
-        bot_reply = structured_response.reply
-    except Exception:
-        bot_reply = "Sorry, I had trouble understanding that."
-
-    # Append AI response to chat
-    st.session_state.messages.append({"role": "assistant", "content": bot_reply})
-    with st.chat_message("assistant"):
-        st.markdown(bot_reply)
+if __name__ == "__main__":
+    asyncio.run(main())
