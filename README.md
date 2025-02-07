@@ -17,11 +17,13 @@ pip install -r requirements.txt
 
 Install ollama:
 https://ollama.com/
-   
+
 Install model: 
 ```
 ollama run gemma2:9b
 ollama run llama3.1:8b
+ollama run llama3.2:3b
+ollama run mistral:7b
 ```
 
 ## Links

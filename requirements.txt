@@ -7,3 +7,4 @@ ollama
 watchdog
 devtools
 asyncio
+pydantic-graph
