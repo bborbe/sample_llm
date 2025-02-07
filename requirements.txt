@@ -4,3 +4,4 @@ logfire
 fastapi
 asyncio
 ollama
+watchdog

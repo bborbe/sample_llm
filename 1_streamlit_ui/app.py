@@ -1,54 +1,52 @@
-import asyncio
 import streamlit as st
-from pydantic import BaseModel, Field
-from pydantic_ai import Agent
-from pydantic_ai.models.openai import OpenAIModel
+import ollama
+from pydantic import BaseModel
 
+# model = "codellama:13b"
+model = "gemma2:9b"
+# model = "llama3.1:8b"
+# model = "llama3.2:3b"
 
-# Define Pydantic model for input validation
-class UserInput(BaseModel):
-    prompt: str = Field(..., min_length=1, max_length=500, title="User Prompt")
+# Define a structured response model
+class AIResponse(BaseModel):
+    reply: str
 
+# Streamlit UI
+st.set_page_config(page_title="Local AI Chat", layout="wide")
+st.title("💬 Local AI Chatbot with Ollama")
 
-model = OpenAIModel(
-    'llama3.1:8b',
-    base_url='http://localhost:11434/v1',
-    api_key='your-api-key',
-)
+# Chat history
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-agent = Agent(
-    model,
-    # 'Be concise, reply with one sentence.' is enough for some models (like openai) to use
-    # the below tools appropriately, but others like anthropic and gemini require a bit more direction.
-    system_prompt=(
-        'Be concise, reply with one sentence.'
-        'Use the `get_lat_lng` tool to get the latitude and longitude of the locations, '
-        'then use the `get_weather` tool to get the weather.'
-    ),
-    retries=2,
-)
+# Display chat history
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
 
-async def main():
+# User input
+user_input = st.chat_input("Ask me anything...")
 
-    # Streamlit UI
-    st.title("AI Agent with Streamlit and Pydantic")
-    st.write("Enter a prompt below and get a response from the AI.")
+if user_input:
+    # Append user message to chat
+    st.session_state.messages.append({"role": "user", "content": user_input})
+    with st.chat_message("user"):
+        st.markdown(user_input)
 
-    # User input
-    txt_input = st.text_area("Enter your prompt:")
+    # Query the local AI model with full chat history
+    response = ollama.chat(
+        model=model,
+        messages=st.session_state.messages,  # Pass entire conversation
+    )
 
-    if st.button("Generate Response"):
-        try:
-            # Validate input with Pydantic
-            user_input = UserInput(prompt=txt_input)
-            response = await agent.run(
-                user_input.prompt
-            )
-            st.write("### AI Response:")
-            st.write(response)
-        except Exception as e:
-            st.error(f"Invalid input: {str(e)}")
+    try:
+        # Validate response with Pydantic
+        structured_response = AIResponse(reply=response['message']['content'])
+        bot_reply = structured_response.reply
+    except Exception:
+        bot_reply = "Sorry, I had trouble understanding that."
 
-
-if __name__ == '__main__':
-    asyncio.run(main())
+    # Append AI response to chat
+    st.session_state.messages.append({"role": "assistant", "content": bot_reply})
+    with st.chat_message("assistant"):
+        st.markdown(bot_reply)
