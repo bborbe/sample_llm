@@ -3,14 +3,6 @@ from pydantic_ai import Agent
 from pydantic_ai.models.openai import OpenAIModel
 from devtools import debug
 import streamlit as st
-from pydantic_ai.messages import (
-    ModelMessage,
-    ModelMessagesTypeAdapter,
-    ModelRequest,
-    ModelResponse,
-    TextPart,
-    UserPromptPart,
-)
 
 model = OpenAIModel(
     "gemma2:9b",
@@ -26,9 +18,8 @@ agent = Agent(
 
 async def main():
     st.set_page_config(page_title="Local AI Chat", layout="wide")
-    st.title("💬 Local AI Chatbot with Ollama")
+    st.title("💬 Local AI Chatbot")
 
-    # Chat history
     if "history" not in st.session_state:
         st.session_state.history = []
     if "messages" not in st.session_state:

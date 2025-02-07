@@ -14,6 +14,8 @@ agent = Agent(
     model,
     retries=2,
 )
+
+
 async def main():
     st.title("Ai Agent")
 
@@ -21,13 +23,14 @@ async def main():
 
     if st.button("Go"):
         if input:
-            response = await agent.run(input)
+            response = await agent.run(
+                user_prompt=input,
+            )
             debug(response)
             st.write("Result:")
             st.write(response.data)
         else:
             st.warning("Please enter something")
-
 
 
 if __name__ == "__main__":
