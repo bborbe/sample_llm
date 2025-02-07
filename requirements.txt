@@ -5,3 +5,5 @@ fastapi
 asyncio
 ollama
 watchdog
+devtools
+asyncio

@@ -1,52 +1,65 @@
+import asyncio
+from pydantic_ai import Agent
+from pydantic_ai.models.openai import OpenAIModel
+from devtools import debug
 import streamlit as st
-import ollama
-from pydantic import BaseModel
+from pydantic_ai.messages import (
+    ModelMessage,
+    ModelMessagesTypeAdapter,
+    ModelRequest,
+    ModelResponse,
+    TextPart,
+    UserPromptPart,
+)
 
-# model = "codellama:13b"
-model = "gemma2:9b"
-# model = "llama3.1:8b"
-# model = "llama3.2:3b"
+model = OpenAIModel(
+    "gemma2:9b",
+    base_url='http://localhost:11434/v1',
+    api_key='your-api-key',
+)
 
-# Define a structured response model
-class AIResponse(BaseModel):
-    reply: str
+agent = Agent(
+    model,
+    retries=2,
+)
 
-# Streamlit UI
-st.set_page_config(page_title="Local AI Chat", layout="wide")
-st.title("💬 Local AI Chatbot with Ollama")
 
-# Chat history
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+async def main():
+    st.set_page_config(page_title="Local AI Chat", layout="wide")
+    st.title("💬 Local AI Chatbot with Ollama")
 
-# Display chat history
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
+    # Chat history
+    if "history" not in st.session_state:
+        st.session_state.history = []
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
 
-# User input
-user_input = st.chat_input("Ask me anything...")
+    # Display chat history
+    for msg in st.session_state.messages:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
 
-if user_input:
-    # Append user message to chat
-    st.session_state.messages.append({"role": "user", "content": user_input})
-    with st.chat_message("user"):
-        st.markdown(user_input)
+    # User input
+    user_input = st.chat_input("Ask me anything...")
 
-    # Query the local AI model with full chat history
-    response = ollama.chat(
-        model=model,
-        messages=st.session_state.messages,  # Pass entire conversation
-    )
+    if user_input:
+        # Append user message to chat
+        st.session_state.messages.append({"role": "user", "content": user_input})
+        with st.chat_message("user"):
+            st.markdown(user_input)
 
-    try:
-        # Validate response with Pydantic
-        structured_response = AIResponse(reply=response['message']['content'])
-        bot_reply = structured_response.reply
-    except Exception:
-        bot_reply = "Sorry, I had trouble understanding that."
+        result = await agent.run(
+            user_prompt=user_input,
+            message_history=st.session_state.history,
+        )
+        debug(result)
+        st.session_state.history = result.all_messages()
 
-    # Append AI response to chat
-    st.session_state.messages.append({"role": "assistant", "content": bot_reply})
-    with st.chat_message("assistant"):
-        st.markdown(bot_reply)
+        # Append AI result to chat
+        st.session_state.messages.append({"role": "assistant", "content": result.data})
+        with st.chat_message("assistant"):
+            st.markdown(result.data)
+
+
+if __name__ == '__main__':
+    asyncio.run(main())
