@@ -12,12 +12,14 @@ logfire.configure(send_to_logfire='if-token-present')
 model_name = "gemma2:9b"
 # model_name = "llama3.2:3b"
 
+model = OpenAIModel(
+    model_name,
+    base_url='http://localhost:11434/v1',
+    api_key='your-api-key',
+)
+
 agent = Agent(
-    OpenAIModel(
-        model_name,
-        base_url='http://localhost:11434/v1',
-        api_key='your-api-key',
-    ),
+    model=model,
     retries=2,
 )
 
