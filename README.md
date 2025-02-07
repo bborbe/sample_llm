@@ -21,6 +21,7 @@ https://ollama.com/
 Install model: 
 ```
 ollama run gemma2:9b
+ollama run llama3.1:8b
 ```
 
 ## Links

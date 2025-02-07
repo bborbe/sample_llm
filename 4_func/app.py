@@ -10,7 +10,7 @@ import streamlit as st
 
 logfire.configure(send_to_logfire='if-token-present')
 
-model_name = "llama3.1:latest"
+model_name = "llama3.1:8b"
 
 
 class DatabaseConn:
