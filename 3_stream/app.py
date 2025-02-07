@@ -1,10 +1,11 @@
+import asyncio
+
 import logfire
 import streamlit as st
-import asyncio
-from pydantic_ai import Agent
-from pydantic_ai.models.openai import OpenAIModel
-from pydantic_ai.messages import ModelRequest, ModelResponse, TextPart
 from devtools import debug
+from pydantic_ai import Agent
+from pydantic_ai.messages import ModelRequest, ModelResponse, TextPart
+from pydantic_ai.models.openai import OpenAIModel
 
 logfire.configure(send_to_logfire='if-token-present')
 
