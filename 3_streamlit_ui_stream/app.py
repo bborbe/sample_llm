@@ -1,15 +1,17 @@
 import asyncio
-
+import os
 import logfire
 import streamlit as st
 from devtools import debug
+from dotenv import load_dotenv
 from pydantic_ai import Agent
 from pydantic_ai.messages import ModelRequest, ModelResponse, TextPart
 from pydantic_ai.models.openai import OpenAIModel
 
 logfire.configure(send_to_logfire='if-token-present')
+load_dotenv()
 
-model_name = "gemma2:9b"
+model_name = os.getenv('MODEL', "gemma2:9b")
 # model_name = "llama3.2:3b"
 
 model = OpenAIModel(

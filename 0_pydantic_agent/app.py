@@ -7,7 +7,6 @@ from pydantic_ai.models.openai import OpenAIModel
 from devtools import debug
 
 logfire.configure(send_to_logfire='if-token-present')
-
 load_dotenv()
 
 model_name = os.getenv('MODEL', 'llama3.2:3b')

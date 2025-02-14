@@ -1,12 +1,12 @@
 from __future__ import annotations
-
 from dataclasses import dataclass
-
 import logfire
 from devtools import debug
+from dotenv import load_dotenv
 from pydantic_graph import BaseNode, End, Graph, GraphRunContext
 
 logfire.configure(send_to_logfire='if-token-present')
+load_dotenv()
 
 
 @dataclass

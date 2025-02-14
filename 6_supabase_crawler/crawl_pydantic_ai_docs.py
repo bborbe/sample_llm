@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import asyncio
+import logfire
 import requests
 from xml.etree import ElementTree
 from typing import List, Dict, Any
@@ -9,20 +10,18 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 from dotenv import load_dotenv
-
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig, CacheMode
 from openai import AsyncOpenAI
-
 from supabase import create_client, Client
 
+logfire.configure(send_to_logfire='if-token-present')
 load_dotenv()
 
 base_url = os.getenv('BASE_URL', 'http://localhost:11434/v1')
 api_key = os.getenv('API_KEY', 'your-api-key')
-llm_model = os.getenv("LLM_MODEL", 'gemma2:9b') # gpt-4o-mini
-embedding_model = os.getenv("EMBEDDING_MODEL", "nomic-embed-text:latest") # text-embedding-3-small
+llm_model = os.getenv("LLM_MODEL", 'gemma2:9b')  # gpt-4o-mini
+embedding_model = os.getenv("EMBEDDING_MODEL", "nomic-embed-text:latest")  # text-embedding-3-small
 
-# Initialize OpenAI and Supabase clients
 openai_client = AsyncOpenAI(
     api_key=api_key,
     base_url=base_url,

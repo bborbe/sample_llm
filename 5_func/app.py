@@ -1,20 +1,19 @@
 from __future__ import annotations as _annotations
-
 import asyncio
 import os
 from dataclasses import dataclass
 from typing import Any
-
 import logfire
 from devtools import debug
+from dotenv import load_dotenv
 from httpx import AsyncClient
 from pydantic_ai import Agent, ModelRetry, RunContext
 from pydantic_ai.models.openai import OpenAIModel
 
 logfire.configure(send_to_logfire='if-token-present')
+load_dotenv()
 
-model_name = "llama3.2:3b"
-
+model_name = os.getenv('MODEL', 'llama3.2:3b')
 model = OpenAIModel(
     model_name,
     base_url='http://localhost:11434/v1',
