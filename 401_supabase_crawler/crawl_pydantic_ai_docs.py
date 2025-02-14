@@ -17,6 +17,7 @@ from supabase import create_client, Client
 logfire.configure(send_to_logfire='if-token-present')
 load_dotenv()
 
+vector_length = 768 # OpenAI embeddings are 1536 dimensions
 base_url = os.getenv('BASE_URL', 'http://localhost:11434/v1')
 api_key = os.getenv('API_KEY', 'your-api-key')
 llm_model = os.getenv("LLM_MODEL", 'gemma2:9b')  # gpt-4o-mini

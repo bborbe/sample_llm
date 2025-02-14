@@ -8,6 +8,8 @@ from typing import List
 
 load_dotenv()
 
+vector_length = 768 # OpenAI embeddings are 1536 dimensions
+
 embedding_model = os.getenv("EMBEDDING_MODEL", "nomic-embed-text:latest")  # text-embedding-3-small
 base_url = os.getenv('BASE_URL', 'http://localhost:11434/v1')
 api_key = os.getenv('API_KEY', 'your-api-key')
@@ -33,7 +35,7 @@ async def get_embedding(text: str) -> List[float]:
         return response.data[0].embedding
     except Exception as e:
         print(f"Error getting embedding: {e}")
-        return [0] * 1536  # Return zero vector on error
+        return [0] * vector_length  # Return zero vector on error
 
 
 async def main():

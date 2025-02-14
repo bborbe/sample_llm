@@ -26,7 +26,7 @@ create index idx_site_pages_metadata on site_pages using gin (metadata);
 
 -- Create a function to search for documentation chunks
 create function match_site_pages (
-  query_embedding vector(1536),
+  query_embedding vector(768),  -- OpenAI embeddings are 1536 dimensions
   match_count int default 10,
   filter jsonb DEFAULT '{}'::jsonb
 ) returns table (
