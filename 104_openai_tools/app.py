@@ -64,7 +64,6 @@ if tool_calls:
     for tool_call in tool_calls:
         function_name = tool_call.function.name
         arguments = json.loads(tool_call.function.arguments)
-
         if function_name == "get_weather":
             result = get_weather(arguments["location"])
             print(f"Weather in {arguments['location']}: {result['temperature']} {result['condition']}")
