@@ -30,3 +30,4 @@ tavily-python
 tiktoken
 uvicorn
 watchdog
+yfinance
