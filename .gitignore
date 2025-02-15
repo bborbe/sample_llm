@@ -1,2 +1,5 @@
 .env
 volumes
+__pycache__/
+venv/
+content/

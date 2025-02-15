@@ -1,9 +1,15 @@
+FlagEmbedding
+accelerate
 asyncio
 beautifulsoup4
+chromadb
 crawl4ai
 devtools
 fastapi
+gpt4all
+gradio
 httpx
+huggingface_hub
 langchain
 langchain-core
 langchain-huggingface
@@ -14,7 +20,6 @@ langchain_openai
 langchainhub
 langgraph
 langserve
-logfire
 logfire
 ollama
 openai
@@ -28,6 +33,7 @@ streamlit
 supabase
 tavily-python
 tiktoken
+torch
 uvicorn
 watchdog
 yfinance
