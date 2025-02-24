@@ -5,7 +5,7 @@ from pydantic import BaseModel
 # Define the state for the graph
 class CalcState(BaseModel):
     input_value: int
-    result: int
+    result: int = 0
 
 
 # Define nodes
@@ -42,7 +42,7 @@ graph = workflow.compile()
 
 # Run the workflow
 try:
-    input_state = {"input_value": 10, "result": 0}
+    input_state = CalcState(input_value=10)
     final_state = graph.invoke(input_state)
     print("Final Result:", final_state["result"])
 except Exception as e:
