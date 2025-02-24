@@ -5,14 +5,18 @@ beautifulsoup4
 chromadb
 crawl4ai
 devtools
+docling
 fastapi
 gpt4all
 gradio
 httpx
 huggingface_hub
+lancedb
 langchain
+langchain-community
 langchain-core
 langchain-huggingface
+langchain-openai
 langchain_community
 langchain_core
 langchain_milvus
@@ -34,6 +38,8 @@ supabase
 tavily-python
 tiktoken
 torch
+transformers
+typing_extensions
 uvicorn
 watchdog
 yfinance
