@@ -60,6 +60,7 @@ response = openai_client.chat.completions.create(
 debug(response)
 
 tool_calls = response.choices[0].message.tool_calls if response.choices else []
+debug(tool_calls)
 if tool_calls:
     for tool_call in tool_calls:
         function_name = tool_call.function.name
