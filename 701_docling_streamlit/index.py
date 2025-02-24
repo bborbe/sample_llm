@@ -22,10 +22,11 @@ model = os.getenv('MODEL', 'llama3.2:3b')
 embedding_model = os.getenv('EMBEDDING_MODEL', 'nomic-embed-text')
 embedding_dims = os.getenv('EMBEDDING_DIMS', 768)
 
-urls = [
-    "https://arxiv.org/pdf/2408.09869"
-]
-urls = get_sitemap_urls("https://ds4sd.github.io/docling/")
+# urls = ["https://arxiv.org/pdf/2408.09869"]
+# urls = get_sitemap_urls("https://ds4sd.github.io/docling/")
+urls = []
+urls.extend(get_sitemap_urls("https://pydantic.dev"))
+urls.extend(get_sitemap_urls("https://ai.pydantic.dev"))
 
 debug(urls)
 
@@ -79,24 +80,27 @@ async def main():
     table = db.create_table("docling", schema=Chunks, mode="overwrite")
 
     for result in converter.convert_all(urls):
-        chunk_iter = chunker.chunk(dl_doc=result.document)
-        chunks = list(chunk_iter)
+        try:
+            chunk_iter = chunker.chunk(dl_doc=result.document)
+            chunks = list(chunk_iter)
 
-        processed_chunks = [
-            {
-                "text": chunk.text,
-                "metadata": {
-                    "filename": chunk.meta.origin.filename,
-                    "page_numbers": sorted(
-                        {prov.page_no for item in chunk.meta.doc_items for prov in item.prov}
-                    ) or None,
-                    "title": chunk.meta.headings[0] if chunk.meta.headings else None,
-                },
-            }
-            for chunk in chunks
-        ]
+            processed_chunks = [
+                {
+                    "text": chunk.text,
+                    "metadata": {
+                        "filename": chunk.meta.origin.filename,
+                        "page_numbers": sorted(
+                            {prov.page_no for item in chunk.meta.doc_items for prov in item.prov}
+                        ) or None,
+                        "title": chunk.meta.headings[0] if chunk.meta.headings else None,
+                    },
+                }
+                for chunk in chunks
+            ]
 
-        table.add(processed_chunks)
+            table.add(processed_chunks)
+        except Exception as e:
+            print(e)
 
     table.to_pandas()
     table.count_rows()

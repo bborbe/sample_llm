@@ -1,11 +1,4 @@
 import os
-from typing import List
-from docling.chunking import HybridChunker
-from docling.document_converter import DocumentConverter
-from lancedb.embeddings import get_registry
-from lancedb.pydantic import LanceModel, Vector
-from tokenizer import OpenAITokenizerWrapper
-import asyncio
 import logfire
 import streamlit as st
 import lancedb
@@ -26,25 +19,15 @@ openai_client = OpenAI(
     api_key=api_key,
 )
 
-
-# Initialize LanceDB connection
-@st.cache_resource
-def init_db():
-    """Initialize database connection.
-
-    Returns:
-        LanceDB table object
-    """
-    db = lancedb.connect("data/lancedb")
-    return db.open_table("docling")
+db = lancedb.connect("data/lancedb")
+table = db.open_table("docling")
 
 
-def get_context(query: str, table, num_results: int = 3) -> str:
+def get_context(query: str, num_results: int = 3) -> str:
     """Search the database for relevant context.
 
     Args:
         query: User's question
-        table: LanceDB table object
         num_results: Number of results to return
 
     Returns:
@@ -108,96 +91,88 @@ def get_chat_response(messages, context: str) -> str:
     return response
 
 
-async def main():
-    # Initialize Streamlit app
-    st.title("📚 Document Q&A")
+# Initialize Streamlit app
+st.title("📚 Document Q&A")
 
-    # Initialize session state for chat history
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
+# Initialize session state for chat history
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-    # Initialize database connection
-    table = init_db()
+# Display chat messages
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
-    # Display chat messages
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+# Chat input
+if prompt := st.chat_input("Ask a question about the document"):
+    # Display user message
+    with st.chat_message("user"):
+        st.markdown(prompt)
 
-    # Chat input
-    if prompt := st.chat_input("Ask a question about the document"):
-        # Display user message
-        with st.chat_message("user"):
-            st.markdown(prompt)
+    # Add user message to chat history
+    st.session_state.messages.append({"role": "user", "content": prompt})
 
-        # Add user message to chat history
-        st.session_state.messages.append({"role": "user", "content": prompt})
+    # Get relevant context
+    with st.status("Searching document...", expanded=False) as status:
+        context = get_context(prompt)
+        st.markdown(
+            """
+            <style>
+            .search-result {
+                margin: 10px 0;
+                padding: 10px;
+                border-radius: 4px;
+                background-color: #f0f2f6;
+            }
+            .search-result summary {
+                cursor: pointer;
+                color: #0f52ba;
+                font-weight: 500;
+            }
+            .search-result summary:hover {
+                color: #1e90ff;
+            }
+            .metadata {
+                font-size: 0.9em;
+                color: #666;
+                font-style: italic;
+            }
+            </style>
+        """,
+            unsafe_allow_html=True,
+        )
 
-        # Get relevant context
-        with st.status("Searching document...", expanded=False) as status:
-            context = get_context(prompt, table)
+        st.write("Found relevant sections:")
+        for chunk in context.split("\n\n"):
+            # Split into text and metadata parts
+            parts = chunk.split("\n")
+            text = parts[0]
+            metadata = {
+                line.split(": ")[0]: line.split(": ")[1]
+                for line in parts[1:]
+                if ": " in line
+            }
+
+            source = metadata.get("Source", "Unknown source")
+            title = metadata.get("Title", "Untitled section")
+
             st.markdown(
-                """
-                <style>
-                .search-result {
-                    margin: 10px 0;
-                    padding: 10px;
-                    border-radius: 4px;
-                    background-color: #f0f2f6;
-                }
-                .search-result summary {
-                    cursor: pointer;
-                    color: #0f52ba;
-                    font-weight: 500;
-                }
-                .search-result summary:hover {
-                    color: #1e90ff;
-                }
-                .metadata {
-                    font-size: 0.9em;
-                    color: #666;
-                    font-style: italic;
-                }
-                </style>
+                f"""
+                <div class="search-result">
+                    <details>
+                        <summary>{source}</summary>
+                        <div class="metadata">Section: {title}</div>
+                        <div style="margin-top: 8px;">{text}</div>
+                    </details>
+                </div>
             """,
                 unsafe_allow_html=True,
             )
 
-            st.write("Found relevant sections:")
-            for chunk in context.split("\n\n"):
-                # Split into text and metadata parts
-                parts = chunk.split("\n")
-                text = parts[0]
-                metadata = {
-                    line.split(": ")[0]: line.split(": ")[1]
-                    for line in parts[1:]
-                    if ": " in line
-                }
+    # Display assistant response first
+    with st.chat_message("assistant"):
+        # Get model response with streaming
+        response = get_chat_response(st.session_state.messages, context)
 
-                source = metadata.get("Source", "Unknown source")
-                title = metadata.get("Title", "Untitled section")
-
-                st.markdown(
-                    f"""
-                    <div class="search-result">
-                        <details>
-                            <summary>{source}</summary>
-                            <div class="metadata">Section: {title}</div>
-                            <div style="margin-top: 8px;">{text}</div>
-                        </details>
-                    </div>
-                """,
-                    unsafe_allow_html=True,
-                )
-
-        # Display assistant response first
-        with st.chat_message("assistant"):
-            # Get model response with streaming
-            response = get_chat_response(st.session_state.messages, context)
-
-        # Add assistant response to chat history
-        st.session_state.messages.append({"role": "assistant", "content": response})
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+    # Add assistant response to chat history
+    st.session_state.messages.append({"role": "assistant", "content": response})
