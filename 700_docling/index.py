@@ -10,7 +10,8 @@ from dotenv import load_dotenv
 from lancedb.embeddings import get_registry
 from lancedb.pydantic import LanceModel, Vector
 from openai import OpenAI
-from tokenizer import OpenAITokenizerWrapper
+from tools.tokenizer import OpenAITokenizerWrapper
+from tools.sitemap import get_sitemap_urls
 
 logfire.configure(send_to_logfire='if-token-present')
 load_dotenv()
@@ -20,6 +21,14 @@ api_key = os.getenv('API_KEY', 'no-llm-api-key-provided')
 model = os.getenv('MODEL', 'llama3.2:3b')
 embedding_model = os.getenv('EMBEDDING_MODEL', 'nomic-embed-text')
 embedding_dims = os.getenv('EMBEDDING_DIMS', 768)
+
+# urls = ["https://arxiv.org/pdf/2408.09869"]
+# urls = get_sitemap_urls("https://ds4sd.github.io/docling/")
+urls = []
+urls.extend(get_sitemap_urls("https://pydantic.dev"))
+urls.extend(get_sitemap_urls("https://ai.pydantic.dev"))
+
+debug(urls)
 
 openai_client = OpenAI(
     base_url=base_url,
@@ -67,48 +76,35 @@ class Chunks(LanceModel):
     metadata: ChunkMetadata
 
 
-def index():
-    result = converter.convert("https://arxiv.org/pdf/2408.09869")
-    chunk_iter = chunker.chunk(dl_doc=result.document)
-    chunks = list(chunk_iter)
-
-    processed_chunks = [
-        {
-            "text": chunk.text,
-            "metadata": {
-                "filename": chunk.meta.origin.filename,
-                "page_numbers": [
-                                    page_no
-                                    for page_no in sorted(
-                        set(
-                            prov.page_no
-                            for item in chunk.meta.doc_items
-                            for prov in item.prov
-                        )
-                    )
-                                ]
-                                or None,
-                "title": chunk.meta.headings[0] if chunk.meta.headings else None,
-            },
-        }
-        for chunk in chunks
-    ]
-
+async def main():
     table = db.create_table("docling", schema=Chunks, mode="overwrite")
-    table.add(processed_chunks)
+
+    for result in converter.convert_all(urls):
+        try:
+            chunk_iter = chunker.chunk(dl_doc=result.document)
+            chunks = list(chunk_iter)
+
+            processed_chunks = [
+                {
+                    "text": chunk.text,
+                    "metadata": {
+                        "filename": chunk.meta.origin.filename,
+                        "page_numbers": sorted(
+                            {prov.page_no for item in chunk.meta.doc_items for prov in item.prov}
+                        ) or None,
+                        "title": chunk.meta.headings[0] if chunk.meta.headings else None,
+                    },
+                }
+                for chunk in chunks
+            ]
+
+            table.add(processed_chunks)
+        except Exception as e:
+            print(e)
+
     table.to_pandas()
     table.count_rows()
-
-
-def search():
-    table = db.open_table("docling")
-    result = table.search(query="pdf").limit(5)
-    debug(result.to_pandas())
-
-
-async def main():
-    index()
-    search()
+    print("completed")
 
 
 if __name__ == '__main__':

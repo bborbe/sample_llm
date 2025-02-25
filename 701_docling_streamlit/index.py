@@ -10,8 +10,8 @@ from dotenv import load_dotenv
 from lancedb.embeddings import get_registry
 from lancedb.pydantic import LanceModel, Vector
 from openai import OpenAI
-from tokenizer import OpenAITokenizerWrapper
-from sitemap import get_sitemap_urls
+from tools.tokenizer import OpenAITokenizerWrapper
+from tools.sitemap import get_sitemap_urls
 
 logfire.configure(send_to_logfire='if-token-present')
 load_dotenv()
