@@ -63,7 +63,7 @@ class ChunkMetadata(LanceModel):
 
 
 func = get_registry().get("openai").create(
-    name="nomic-embed-text",
+    name=embedding_model,
     dim=embedding_dims,
     base_url=base_url,
     api_key=api_key,
