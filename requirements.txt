@@ -43,3 +43,4 @@ typing_extensions
 uvicorn
 watchdog
 yfinance
+scrapy
