@@ -23,8 +23,12 @@ class MySpider(CrawlSpider):
 
 # ✅ Running CrawlSpider with CrawlerProcess
 process = CrawlerProcess(settings={
-#    "FEEDS": {"output.json": {"format": "json"}},  # Save results in JSON
     "LOG_LEVEL": "WARN",
+    # "LOG_LEVEL": "INFO",
+    # "LOG_LEVEL": "DEBUG",
+    "USER_AGENT": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
+    "ROBOTSTXT_OBEY": False,
+    #    "FEEDS": {"output.json": {"format": "json"}},  # Save results in JSON
 })
 
 process.crawl(MySpider)
