@@ -44,5 +44,5 @@ uvicorn
 watchdog
 yfinance
 scrapy
-qdrant_client
+qdrant_client==1.13.3
 fastembed

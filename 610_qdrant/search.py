@@ -1,9 +1,15 @@
+import logging
 import os
 import logfire
+from devtools import debug
 from dotenv import load_dotenv
 from openai import OpenAI
 from qdrant_client import QdrantClient
 from qdrant_client.models import SearchParams
+
+logging.basicConfig(level=logging.WARN)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 logfire.configure(send_to_logfire='if-token-present')
 load_dotenv()
@@ -36,6 +42,7 @@ def get_embedding(text):
 # 🔍 Search Query
 query_text = 'what is pydantic'
 query_vector = get_embedding(query_text)
+# debug(query_vector)
 
 # Perform search in Qdrant
 search_results = qdrant_client.search(
@@ -44,6 +51,7 @@ search_results = qdrant_client.search(
     limit=3,  # Get top 3 most similar results
     search_params=SearchParams(hnsw_ef=128, exact=False)  # Approximate search
 )
+debug(search_results)
 
 # Print search results
 print("\n🔍 **Search Results:**")

@@ -1,7 +1,6 @@
+import logging
 import os
-
 from qdrant_client.http.models import PointStruct
-
 from tools.tokenizer import OpenAITokenizerWrapper
 import logfire
 from docling.document_converter import DocumentConverter
@@ -9,6 +8,11 @@ from docling_core.transforms.chunker.hybrid_chunker import HybridChunker
 from openai import OpenAI
 from dotenv import load_dotenv
 from qdrant_client import QdrantClient
+from tools.sitemap import get_sitemap_urls
+
+logging.basicConfig(level=logging.WARN)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 logfire.configure(send_to_logfire='if-token-present')
 load_dotenv()
@@ -17,7 +21,6 @@ api_key = os.getenv('API_KEY', 'no-llm-api-key-provided')
 base_url = os.getenv('BASE_URL', 'http://localhost:11434/v1')
 embedding_model = os.getenv("EMBEDDING_MODEL", "nomic-embed-text:latest")  # text-embedding-3-small
 embedding_dims = os.getenv('EMBEDDING_DIMS', 768)
-from tools.sitemap import get_sitemap_urls
 
 converter = DocumentConverter()
 
@@ -32,6 +35,7 @@ qdrant_client = QdrantClient(
     location="localhost",
     port=6333,
 )
+
 qdrant_client.delete_collection(COLLECTION_NAME, timeout=60)
 qdrant_client.create_collection(
     collection_name=COLLECTION_NAME,
@@ -64,41 +68,45 @@ def get_embedding(text):
 urls = []
 urls.extend(get_sitemap_urls("https://pydantic.dev"))
 urls.extend(get_sitemap_urls("https://ai.pydantic.dev"))
+logger.info(f'found {len(urls)} to index')
 
-for result in converter.convert_all(urls):
+idx = 0
+for url in urls:
+    logger.debug(f'process url {url} started')
+    result = converter.convert(url)
     try:
         chunk_iter = chunker.chunk(dl_doc=result.document)
         chunks = list(chunk_iter)
-        texts = [
-            chunk.text for chunk in chunks
-        ]
+        logger.info(f'chunk size: {len(chunks)}')
 
-        # metadatas = [
-        #     {
-        #         "filename": chunk.meta.origin.filename,
-        #         "page_numbers": sorted(
-        #             {prov.page_no for item in chunk.meta.doc_items for prov in item.prov}
-        #         ) or None,
-        #         "title": chunk.meta.headings[0] if chunk.meta.headings else None,
-        #     } for chunk in chunks
-        # ]
-        embedding_result = openai_client.embeddings.create(
-            input=texts,
+        embedding_results = openai_client.embeddings.create(
+            input=[chunk.text for chunk in chunks],
             model=embedding_model,
         )
-        points = [
-            PointStruct(
-                id=idx,
-                vector=data.embedding,
-                payload={
-                    "text": text,
-                },
+
+        points = []
+        for page_number, (embedding, chunk) in enumerate(zip(embedding_results.data, chunks)):
+            idx += 1
+            points.append(
+                PointStruct(
+                    id=idx,
+                    vector=embedding.embedding,
+                    payload={
+                        "url": url,
+                        "text": chunk.text,
+                        "filename": chunk.meta.origin.filename,
+                        "page_number": page_number,
+                        "title": chunk.meta.headings[0] if chunk.meta.headings else None,
+                    },
+                )
             )
-            for idx, (data, text) in enumerate(zip(embedding_result.data, texts))
-        ]
+            logger.info(f'points {idx} completed')
         qdrant_client.upsert(COLLECTION_NAME, points)
+        logger.info(f'insert {len(points)} for url {url} completed')
 
     except Exception as e:
-        print(e)
+        logger.info(f'process url {url} failed: {e}')
+    finally:
+        logger.debug(f'process url {url} completed')
 
-print("completed")
+logger.info(f'indexed {len(urls)} urls with {idx} points completed')
