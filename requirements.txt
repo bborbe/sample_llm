@@ -45,3 +45,4 @@ watchdog
 yfinance
 scrapy
 qdrant_client
+fastembed

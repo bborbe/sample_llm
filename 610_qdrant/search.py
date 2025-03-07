@@ -1,7 +1,5 @@
 import os
-
 import logfire
-import openai
 from dotenv import load_dotenv
 from openai import OpenAI
 from qdrant_client import QdrantClient
@@ -21,7 +19,7 @@ openai_client = OpenAI(
 )
 
 # Initialize Qdrant client
-qdrant = QdrantClient("localhost", port=6333)
+qdrant_client = QdrantClient("localhost", port=6333)
 
 # Collection Name
 COLLECTION_NAME = "my_collection"
@@ -36,11 +34,11 @@ def get_embedding(text):
 
 
 # 🔍 Search Query
-query_text = "Future of AI in technology"
+query_text = 'what is pydantic'
 query_vector = get_embedding(query_text)
 
 # Perform search in Qdrant
-search_results = qdrant.search(
+search_results = qdrant_client.search(
     collection_name=COLLECTION_NAME,
     query_vector=query_vector,
     limit=3,  # Get top 3 most similar results
