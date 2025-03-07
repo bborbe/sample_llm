@@ -44,3 +44,4 @@ uvicorn
 watchdog
 yfinance
 scrapy
+qdrant_client
