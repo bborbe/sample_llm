@@ -16,5 +16,11 @@ debug(results)
 
 # Print search results
 print("\n🔍 **Search Results:**")
-for result in results.text:
-    print(f"📌 {result}")
+for x in range(0, len(results)):
+    metadata = results.metadata[x]
+    print(
+        f'📌 {results.text[x]} '
+        f'filename: {metadata["filename"]} '
+        f'title: {metadata["title"]} '
+        f'page_numbers: {metadata["page_numbers"]}'
+    )

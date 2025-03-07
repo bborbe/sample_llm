@@ -1,7 +1,6 @@
 import os
 from typing import List
 from devtools import debug
-import asyncio
 import lancedb
 import logfire
 from docling.chunking import HybridChunker
