@@ -20,7 +20,6 @@ model = GeminiModel(
 
 agent = Agent(
     model=model,
-    retries=2,
 )
 
 if __name__ == '__main__':
