@@ -11,9 +11,11 @@ from pydantic_ai.models.openai import OpenAIModel
 logfire.configure(send_to_logfire='if-token-present')
 load_dotenv()
 
-model_name = os.getenv('MODEL', "gemma2:9b")
-# model_name = "llama3.2:3b"
-
+# llama3.2:3b
+# gemma2:9b
+# gemma3:4b
+# gemma3:12b
+model_name = os.getenv('MODEL', "gemma3:12b")
 model = OpenAIModel(
     model_name,
     base_url='http://localhost:11434/v1',
