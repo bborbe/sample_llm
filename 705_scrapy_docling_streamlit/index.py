@@ -19,7 +19,7 @@ load_dotenv()
 
 base_url = os.getenv('BASE_URL', 'http://localhost:11434/v1')
 api_key = os.getenv('API_KEY', 'no-llm-api-key-provided')
-model = os.getenv('MODEL', 'llama3.2:3b')
+model = os.getenv('MODEL', 'gemma3:12b')
 embedding_model = os.getenv('EMBEDDING_MODEL', 'nomic-embed-text')
 embedding_dims = os.getenv('EMBEDDING_DIMS', 768)
 
